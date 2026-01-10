@@ -15,13 +15,41 @@ impl Vec3 {
     pub const EPSILON: f64 = 1e-10;
 
     // 常用常量
-    pub const ZERO: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-    pub const ONE: Vec3  = Vec3 { x: 1.0, y: 1.0, z: 1.0 }; // 全1向量
-    pub const I: Vec3    = Vec3 { x: 1.0, y: 0.0, z: 0.0 }; // X轴
-    pub const J: Vec3    = Vec3 { x: 0.0, y: 1.0, z: 0.0 }; // Y轴
-    pub const K: Vec3    = Vec3 { x: 0.0, y: 0.0, z: 1.0 }; // Z轴
-    pub const INF: Vec3  = Vec3 { x: f64::INFINITY, y: f64::INFINITY, z: f64::INFINITY };
-    pub const NAN: Vec3  = Vec3 { x: f64::NAN, y: f64::NAN, z: f64::NAN };
+    pub const ZERO: Vec3 = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+    pub const ONE: Vec3 = Vec3 {
+        x: 1.0,
+        y: 1.0,
+        z: 1.0,
+    }; // 全1向量
+    pub const I: Vec3 = Vec3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    }; // X轴
+    pub const J: Vec3 = Vec3 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    }; // Y轴
+    pub const K: Vec3 = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    }; // Z轴
+    pub const INF: Vec3 = Vec3 {
+        x: f64::INFINITY,
+        y: f64::INFINITY,
+        z: f64::INFINITY,
+    };
+    pub const NAN: Vec3 = Vec3 {
+        x: f64::NAN,
+        y: f64::NAN,
+        z: f64::NAN,
+    };
 
     /// 基础构造
     #[inline(always)]
@@ -41,6 +69,15 @@ impl Vec3 {
             x: r * sin_t * cos_p,
             y: r * sin_t * sin_p,
             z: r * cos_t,
+        }
+    }
+
+    #[inline]
+    pub fn rand() -> Self {
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         }
     }
 
@@ -90,7 +127,11 @@ impl Vec3 {
     #[inline]
     pub fn unit(self) -> Vec3 {
         let l = self.len();
-        if l > Self::EPSILON { self / l } else { Vec3::ZERO }
+        if l > Self::EPSILON {
+            self / l
+        } else {
+            Vec3::ZERO
+        }
     }
 
     /// 投影向量: self 投影到 other 上
@@ -150,7 +191,11 @@ impl Vec3 {
     /// 夹角余弦值
     pub fn cos(self, other: Vec3) -> f64 {
         let den = self.len() * other.len();
-        if den < Self::EPSILON { 0.0 } else { self.dot(other) / den }
+        if den < Self::EPSILON {
+            0.0
+        } else {
+            self.dot(other) / den
+        }
     }
 }
 
@@ -159,15 +204,24 @@ impl Vec3 {
 // 1. 基础实现 Value op Value
 impl Add for Vec3 {
     type Output = Vec3;
-    #[inline] fn add(self, rhs: Vec3) -> Vec3 { Vec3::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z) }
+    #[inline]
+    fn add(self, rhs: Vec3) -> Vec3 {
+        Vec3::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
 }
 impl Sub for Vec3 {
     type Output = Vec3;
-    #[inline] fn sub(self, rhs: Vec3) -> Vec3 { Vec3::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z) }
+    #[inline]
+    fn sub(self, rhs: Vec3) -> Vec3 {
+        Vec3::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
 }
 impl Neg for Vec3 {
     type Output = Vec3;
-    #[inline] fn neg(self) -> Vec3 { Vec3::new(-self.x, -self.y, -self.z) }
+    #[inline]
+    fn neg(self) -> Vec3 {
+        Vec3::new(-self.x, -self.y, -self.z)
+    }
 }
 
 // 2. 宏生成引用组合
@@ -175,15 +229,24 @@ macro_rules! impl_bin_op_permutations {
     ($Trait:ident, $method:ident) => {
         impl $Trait<Vec3> for &Vec3 {
             type Output = Vec3;
-            #[inline] fn $method(self, rhs: Vec3) -> Vec3 { (*self).$method(rhs) }
+            #[inline]
+            fn $method(self, rhs: Vec3) -> Vec3 {
+                (*self).$method(rhs)
+            }
         }
         impl $Trait<&Vec3> for Vec3 {
             type Output = Vec3;
-            #[inline] fn $method(self, rhs: &Vec3) -> Vec3 { self.$method(*rhs) }
+            #[inline]
+            fn $method(self, rhs: &Vec3) -> Vec3 {
+                self.$method(*rhs)
+            }
         }
         impl $Trait<&Vec3> for &Vec3 {
             type Output = Vec3;
-            #[inline] fn $method(self, rhs: &Vec3) -> Vec3 { (*self).$method(*rhs) }
+            #[inline]
+            fn $method(self, rhs: &Vec3) -> Vec3 {
+                (*self).$method(*rhs)
+            }
         }
     };
 }
@@ -196,37 +259,84 @@ impl_bin_op_permutations!(Sub, sub);
 // Vec3 * f64
 impl Mul<f64> for Vec3 {
     type Output = Vec3;
-    #[inline] fn mul(self, rhs: f64) -> Vec3 { Vec3::new(self.x * rhs, self.y * rhs, self.z * rhs) }
+    #[inline]
+    fn mul(self, rhs: f64) -> Vec3 {
+        Vec3::new(self.x * rhs, self.y * rhs, self.z * rhs)
+    }
 }
 // f64 * Vec3
 impl Mul<Vec3> for f64 {
     type Output = Vec3;
-    #[inline] fn mul(self, rhs: Vec3) -> Vec3 { rhs * self }
+    #[inline]
+    fn mul(self, rhs: Vec3) -> Vec3 {
+        rhs * self
+    }
 }
 // Vec3 / f64
 impl Div<f64> for Vec3 {
     type Output = Vec3;
-    #[inline] fn div(self, rhs: f64) -> Vec3 { Vec3::new(self.x / rhs, self.y / rhs, self.z / rhs) }
+    #[inline]
+    fn div(self, rhs: f64) -> Vec3 {
+        Vec3::new(self.x / rhs, self.y / rhs, self.z / rhs)
+    }
 }
 
 // 引用支持
-impl Mul<f64> for &Vec3 { type Output = Vec3; #[inline] fn mul(self, rhs: f64) -> Vec3 { *self * rhs } }
-impl Mul<&Vec3> for f64 { type Output = Vec3; #[inline] fn mul(self, rhs: &Vec3) -> Vec3 { *rhs * self } }
-impl Div<f64> for &Vec3 { type Output = Vec3; #[inline] fn div(self, rhs: f64) -> Vec3 { *self / rhs } }
+impl Mul<f64> for &Vec3 {
+    type Output = Vec3;
+    #[inline]
+    fn mul(self, rhs: f64) -> Vec3 {
+        *self * rhs
+    }
+}
+impl Mul<&Vec3> for f64 {
+    type Output = Vec3;
+    #[inline]
+    fn mul(self, rhs: &Vec3) -> Vec3 {
+        *rhs * self
+    }
+}
+impl Div<f64> for &Vec3 {
+    type Output = Vec3;
+    #[inline]
+    fn div(self, rhs: f64) -> Vec3 {
+        *self / rhs
+    }
+}
 
 // ====================== 赋值运算符 ======================
 
 impl AddAssign for Vec3 {
-    #[inline] fn add_assign(&mut self, rhs: Self) { self.x += rhs.x; self.y += rhs.y; self.z += rhs.z; }
+    #[inline]
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
+    }
 }
 impl SubAssign for Vec3 {
-    #[inline] fn sub_assign(&mut self, rhs: Self) { self.x -= rhs.x; self.y -= rhs.y; self.z -= rhs.z; }
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+        self.z -= rhs.z;
+    }
 }
 impl MulAssign<f64> for Vec3 {
-    #[inline] fn mul_assign(&mut self, rhs: f64) { self.x *= rhs; self.y *= rhs; self.z *= rhs; }
+    #[inline]
+    fn mul_assign(&mut self, rhs: f64) {
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
+    }
 }
 impl DivAssign<f64> for Vec3 {
-    #[inline] fn div_assign(&mut self, rhs: f64) { self.x /= rhs; self.y /= rhs; self.z /= rhs; }
+    #[inline]
+    fn div_assign(&mut self, rhs: f64) {
+        self.x /= rhs;
+        self.y /= rhs;
+        self.z /= rhs;
+    }
 }
 
 // ====================== Display ======================

@@ -8,3 +8,4 @@ pub mod fertile;
 pub mod conic;
 
 pub mod intersection;
+pub mod special;

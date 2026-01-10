@@ -11,4 +11,7 @@ pub mod direction;
 pub mod plane;
 
 //
-pub mod line;
+pub mod line3;
+
+//
+pub mod tetrahedron;
