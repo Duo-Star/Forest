@@ -1,0 +1,56 @@
+[package]
+name = "Forest"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+# winit: 窗口创建和事件处理
+# Winit 是一个跨平台的窗口管理库，专门为 Rust 语言设计。
+# 它提供了统一的接口来创建和管理操作系统窗口，处理用户输入事件，是构建图形应用程序的基础。
+winit = "0.30.12"
+
+
+# wgpu: 核心图形 API
+# wgpu 是一个跨平台的图形 API 库，专为 Rust 语言设计。
+# 它提供了现代图形编程的统一接口，让开发者能够编写一次代码，在多个平台（包括桌面、移动端和 Web）上运行。
+wgpu = "28.0.0"
+
+
+# env_logger & log: 打印 GPU 错误信息
+env_logger = "0.11"
+
+# 日志
+log = "0.4"
+
+# pollster: 简单的异步执行器，用于启动 GPU 任务
+pollster = "0.4.0"
+
+
+# Rayon 是一个 Rust 的数据并行计算库，它能让并行编程变得简单而安全。
+# 它的核心理念是让普通的迭代器代码自动并行化，只需很小的改动。
+rayon = "1.8"
+
+# 用于数据对齐
+bytemuck = { version = "1.14", features = ["derive"] }
+
+# 用于 3D 数学
+# Rust 图形学中最常用的数学库 glam。更安全、更快（利用 SIMD），且与 WGPU 配合完美。
+glam = { version = "0.24", features = ["bytemuck"] }
+
+
+# XCAS giac
+giacrs = "0.1.3"
+
+
+#
+rand = "0.8.5"
+
+# 提升发布版性能
+# [profile.release]
+# opt-level = 3       # 最高优化等级 (默认就是3，写出来明确一下)
+# lto = "fat"         # 开启全量链接时优化 (Link Time Optimization)，跨包优化代码，速度更快但编译变慢
+# codegen-units = 1   # 降低并行编译单元数，虽然编译慢了，但生成的代码质量更高
+# panic = 'abort'     # 发生 panic 时直接终止，减少错误处理的额外开销
+# strip = true        # 移除符号表，减小二进制体积（不影响速度，但让程序更轻）
+
