@@ -1,5 +1,10 @@
 use std::io::{self, Write};
 use std::time::Instant;
+use crate::pakoo::env::Env;
+use crate::pakoo::math_data::MathData;
+use crate::pakoo::op::Op;
+use crate::pakoo::rpn::RPN;
+use crate::pakoo::slice::Slice;
 
 mod graph;
 mod math_forest;
@@ -37,12 +42,101 @@ fn main() {
         "nse" => {
             test::nse::main_();
         }
+        "5" => {
+            test_5() ;
+        }
+        "6" => {
+            test_6();
+        }
         
         _ => {
             println!("无效的输入 '{}'，改为'd2' 或 'd3'", input.trim());
         }
     }
 }
+
+
+fn test_5() {
+    let start = Instant::now(); // 获取当前时间
+
+    let mut env = Env::new();
+
+    let rpn = RPN::new(vec![
+        Op::Push(MathData::Num(1.0)),
+        Op::Push(MathData::Num(1.0)),
+        Op::Mul,
+        Op::Push(MathData::Num(2.0)),
+        Op::Push(MathData::Num(2.0)),
+        Op::Mul,
+        Op::Add,
+        Op::Sin,
+        Op::Push(MathData::Num(1.0)),
+        Op::Push(MathData::Num(2.0)),
+        Op::Add,
+        Op::Push(MathData::Num(1.0)),
+        Op::Add,
+        Op::Div,
+    ]);
+
+    for i in 0..1000_0000 {
+        let a =rpn.eval(&env.data, &[]);
+    }
+
+    let duration = start.elapsed(); // 计算耗时
+    println!("10000000次循环总耗时: {:?}", duration);
+    println!("平均每次耗时: {:?}", duration / 1000_0000);
+}
+
+
+fn test_6() {
+
+    // f(x) = x + 2.0
+    // g(x) = f(f(x)) + 1.0
+    // g(2.0) + 2.0
+    let mut env = Env::new();
+    // f(x) = x + 2.0
+    env.add_slice(Slice::Def {
+        para_count: 1,
+        body: RPN::new(vec![Op::LoadPara(0), Op::Push(MathData::Num(2.0)), Op::Add]),
+    });
+    // g(x) = f(f(x)) + 1.0
+    env.add_slice(Slice::Def {
+        para_count: 1,
+        body: RPN::new(vec![
+            Op::CallDef(
+                0,
+                vec![RPN::new(vec![Op::CallDef(
+                    0,
+                    vec![RPN::new(vec![Op::LoadPara(0)])],
+                )])],
+            ),
+            Op::Push(MathData::Num(1.0)),
+            Op::Add,
+        ]),
+    });
+    // g(2.0) + 2.0
+    env.add_slice(Slice::Call {
+        body: RPN::new(vec![
+            Op::CallDef(1, vec![RPN::new(vec![Op::Push(MathData::Num(2.0))])]),
+            Op::Push(MathData::Num(2.0)),
+            Op::Add,
+        ]),
+    });
+    let data = env.update();
+    println!("last data: {:?}", data);
+    println!("env:\n {}", env.fmt());
+
+    let start = Instant::now(); // 获取当前时间
+
+    for i in 0..1000_0000 {
+        let data = env.update();
+    }
+
+    let duration = start.elapsed(); // 计算耗时
+    println!("test_6: 1000_0000次循环总耗时: {:?}", duration);
+    println!("平均每次耗时: {:?}", duration / 1000_0000);
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -56,5 +150,40 @@ mod tests {
         println!("a^b, b^a : {}, {}", x, y);
         assert!(x == y);
     }
+}
+
+fn test_4() {
+    let mut env = Env::new();
+    // f(x) = x + 2.0
+    env.add_slice(Slice::Def {
+        para_count: 1,
+        body: RPN::new(vec![Op::LoadPara(0), Op::Push(MathData::Num(2.0)), Op::Add]),
+    });
+    // g(x) = f(f(x)) + 1.0
+    env.add_slice(Slice::Def {
+        para_count: 1,
+        body: RPN::new(vec![
+            Op::CallDef(
+                0,
+                vec![RPN::new(vec![Op::CallDef(
+                    0,
+                    vec![RPN::new(vec![Op::LoadPara(0)])],
+                )])],
+            ),
+            Op::Push(MathData::Num(1.0)),
+            Op::Add,
+        ]),
+    });
+    // g(2.0) + 2.0
+    env.add_slice(Slice::Call {
+        body: RPN::new(vec![
+            Op::CallDef(1, vec![RPN::new(vec![Op::Push(MathData::Num(2.0))])]),
+            Op::Push(MathData::Num(2.0)),
+            Op::Add,
+        ]),
+    });
+    let data = env.update();
+    println!("last data: {:?}", data);
+    println!("env:\n {}", env.fmt());
 }
 

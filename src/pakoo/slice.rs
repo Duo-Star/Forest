@@ -36,7 +36,7 @@ impl Slice {
                     // 修复错误：将 RPN 包装进 Arc
                     // 这里虽然还有一次 clone，但这是在"定义函数"时发生的（只发生一次）
                     // 在"调用函数"时已经没有 clone 了，所以是可以接受的
-                    body: Arc::new(body.clone()),
+                    body: Arc::new(std::mem::take(body)),
                 }
             }
         }

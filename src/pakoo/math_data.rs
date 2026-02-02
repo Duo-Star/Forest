@@ -6,142 +6,111 @@ use super::rpn::RPN;
 
 #[derive(Debug, Clone)]
 pub enum MathData {
+    None,
     Num(f64),
     Vec(Vec3),
     Fun { para_count: usize, body: Arc<RPN> },
 }
 
-// --- 核心逻辑：在这里处理类型匹配 ---
+// --- 核心修改：实现 Default ---
+// 这样 [MathData; 32] 才能被初始化
+impl Default for MathData {
+    fn default() -> Self {
+        MathData::Num(0.0)
+    }
+}
+
+// --- 运算符重载逻辑 ---
 
 impl Add for MathData {
     type Output = MathData;
-
+    #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (MathData::Num(a), MathData::Num(b)) => MathData::Num(a + b),
-            (MathData::Vec(a), MathData::Vec(b)) => MathData::Vec(a + b), // 假设 Vec3 实现了 Add
+            (MathData::Vec(a), MathData::Vec(b)) => MathData::Vec(a + b),
             (MathData::Num(_), MathData::Vec(_)) | (MathData::Vec(_), MathData::Num(_)) => {
                 panic!("类型错误: 不能将 数字 和 向量 直接相加");
             }
-            _ => {
-                panic!("类型错误: 运算类型不匹配");
-            }
+            _ => panic!("类型错误: 运算类型不匹配"),
         }
     }
 }
 
 impl Sub for MathData {
     type Output = MathData;
-
+    #[inline(always)]
     fn sub(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (MathData::Num(a), MathData::Num(b)) => MathData::Num(a - b),
             (MathData::Vec(a), MathData::Vec(b)) => MathData::Vec(a - b),
-            _ => {
-                panic!("类型错误: 运算类型不匹配");
-            }
+            _ => panic!("类型错误: 运算类型不匹配"),
         }
     }
 }
 
 impl Mul for MathData {
     type Output = MathData;
-
+    #[inline(always)]
     fn mul(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (MathData::Num(a), MathData::Num(b)) => MathData::Num(a * b),
-            // 向量数乘： v * 2.0
             (MathData::Vec(v), MathData::Num(s)) => MathData::Vec(v * s),
-            // 向量数乘交换律： 2.0 * v
             (MathData::Num(s), MathData::Vec(v)) => MathData::Vec(v * s),
-            // 两个向量相乘？通常可能有歧义，这里先panic，或者定义为逐分量相乘
             (MathData::Vec(_), MathData::Vec(_)) => {
-                panic!("类型错误: 向量与向量不能直接使用 * (请使用 Dot 或 Cross 指令)");
+                panic!("类型错误: 向量与向量相乘需显式使用点乘或叉乘指令");
             }
-            _ => {
-                panic!("类型错误: 运算类型不匹配");
-            }
+            _ => panic!("类型错误: 运算类型不匹配"),
         }
     }
 }
 
 impl Div for MathData {
     type Output = MathData;
-
+    #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (MathData::Num(a), MathData::Num(b)) => {
-                if b == 0.0 {
-                    panic!("除以零！");
-                }
+                if b == 0.0 { panic!("除以零！"); }
                 MathData::Num(a / b)
             }
-            // 向量除以标量： v / 2.0
             (MathData::Vec(v), MathData::Num(s)) => {
-                if s == 0.0 {
-                    panic!("向量除以零！");
-                }
-                MathData::Vec(v * (1.0 / s)) // 乘倒数
+                if s == 0.0 { panic!("向量除以零！"); }
+                MathData::Vec(v * (1.0 / s))
             }
-            (MathData::Num(_), MathData::Vec(_)) => panic!("类型错误: 不能用数字除以向量"),
-            (MathData::Vec(_), MathData::Vec(_)) => panic!("类型错误: 向量不能除以向量"),
-            _ => {
-                panic!("类型错误: 运算类型不匹配");
-            }
+            _ => panic!("类型错误: 非法的除法运算"),
         }
     }
 }
 
+// --- 数学函数与实用方法 ---
+
 impl MathData {
+    #[inline(always)]
     pub fn sin(&self) -> MathData {
-        match self {
-            MathData::Num(val) => MathData::Num(val.sin()),
-            _ => {
-                panic!("类型错误: 不能对非数字进行 sin 运算");
-            }
+        if let MathData::Num(val) = self {
+            MathData::Num(val.sin())
+        } else {
+            panic!("类型错误: sin 仅支持数字");
         }
     }
+    #[inline(always)]
     pub fn cos(&self) -> MathData {
-        match self {
-            MathData::Num(val) => MathData::Num(val.cos()),
-            _ => {
-                panic!("类型错误: 不能对非数字进行 cos 运算");
-            }
+        if let MathData::Num(val) = self {
+            MathData::Num(val.cos())
+        } else {
+            panic!("类型错误: cos 仅支持数字");
         }
     }
+    #[inline(always)]
     pub fn tan(&self) -> MathData {
-        match self {
-            MathData::Num(val) => MathData::Num(val.tan()),
-            _ => {
-                panic!("类型错误: 不能对非数字进行 tan 运算");
-            }
+        if let MathData::Num(val) = self {
+            MathData::Num(val.tan())
+        } else {
+            panic!("类型错误: tan 仅支持数字");
         }
     }
-}
 
-impl MathData {
-    pub fn clone(&self) -> MathData {
-        match self {
-            MathData::Num(val) => MathData::Num(*val),
-            MathData::Vec(vec) => MathData::Vec(vec.clone()),
-            MathData::Fun { para_count, body } => MathData::Fun {
-                para_count: *para_count,
-                body: body.clone(),
-            },
-        }
-    }
-    //
-    pub fn eval(&self, env_data: &Vec<MathData>) -> MathData {
-        match self {
-            MathData::Num(val) => MathData::Num(*val),
-            MathData::Vec(vec) => MathData::Vec(vec.clone()),
-            MathData::Fun { para_count, body } => {
-                // 函数求值返回函数本身
-                MathData::Fun {
-                    para_count: *para_count,
-                    body: body.clone(),
-                }
-            }
-        }
-    }
+    // 注意：Rust 自动通过 #[derive(Clone)] 生成了 clone 方法。
+    // 如果没有特殊逻辑，不需要手动实现 pub fn clone(&self)。
 }

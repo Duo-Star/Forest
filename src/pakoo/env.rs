@@ -6,7 +6,7 @@ use super::slice::Slice;
 #[allow(dead_code)]
 pub struct Env {
     slice: Vec<Slice>,
-    pub(crate) data: Vec<MathData>,
+    pub data: Vec<MathData>,
 }
 
 #[allow(dead_code)]
@@ -31,11 +31,20 @@ impl Env {
     }
 
     pub fn update(&mut self) -> MathData {
-        // 先把 slice 取出来，避免直接在 self 上调用 iter
-        for i in 0..self.slice.len() {
-            let result = self.slice[i].eval(&self.data);
-            self.data.push(result);
+        // 假设 Env 初始化时 data 已经有了初始值（比如定义的函数）
+        // 这里我们要么清空 data 的计算部分，要么直接覆盖
+
+        // 为了高性能，我们假设 data 的长度和 slice 是一一对应的
+        // 第一次运行时初始化 data
+        if self.data.len() < self.slice.len() {
+            self.data.resize(self.slice.len(), MathData::default());
         }
+
+        for i in 0..self.slice.len() {
+            // 直接覆盖，不要 push
+            self.data[i] = self.slice[i].eval(&self.data);
+        }
+
         self.data.last().expect("Data should not be empty").clone()
     }
 
@@ -137,6 +146,9 @@ mod tests {
 
     #[test]
     fn test_4() {
+        // f(x) = x + 2.0
+        // g(x) = f(f(x)) + 1.0
+        // g(2.0) + 2.0
         let mut env = Env::new();
         // f(x) = x + 2.0
         env.add_slice(Slice::Def {
@@ -194,12 +206,12 @@ mod tests {
             Op::Div,
         ]);
 
-        for i in 0..1000_00 {
+        for i in 0..1000_0000 {
             let a =rpn.eval(&env.data, &[]);
         }
 
         let duration = start.elapsed(); // 计算耗时
         println!("1000次循环总耗时: {:?}", duration);
-        println!("平均每次耗时: {:?}", duration / 1000_00);
+        println!("平均每次耗时: {:?}", duration / 1000_0000);
     }
 }
